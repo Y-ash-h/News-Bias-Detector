@@ -9,7 +9,7 @@ const websites = [
     "https://www.republicworld.com/",
 ]
 
-const backendUrl = process.env.BACKEND_URL || "localhost:5000"
+const backendUrl = process.env.BACKEND_URL || "http://localhost:5001"
 const nextBackend = "/api/"
 const payload = {
     websites: websites,

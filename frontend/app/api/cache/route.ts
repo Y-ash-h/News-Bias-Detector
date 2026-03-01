@@ -5,7 +5,7 @@ import { Collection } from 'mongodb'
 export async function GET() {
   try {
     const client = await clientPromise
-    const collection: Collection = client.db("NewsBiasApp").collection("NewsArtciles")
+    const collection: Collection = client.db("newsBias").collection("NewsArticles")
     
     // Retrieve all documents
     const entireData = await collection
@@ -13,10 +13,7 @@ export async function GET() {
       .toArray()
     
     if (!entireData.length) {
-      return NextResponse.json(
-        { error: "No cached data found. Please scrape first." },
-        { status: 404 }
-      )
+      return NextResponse.json([], { status: 200 })
     }
 
     // Sort: items with publish date first (descending), then those without publish date at the end
@@ -34,8 +31,12 @@ export async function GET() {
 
     return NextResponse.json(sortedData)
   } catch (error) {
+    // Surface the actual error in server logs and response for debugging
+    console.error("/api/cache GET failed:", error)
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    const stack = error instanceof Error ? error.stack : undefined
     return NextResponse.json(
-      { error: `Failed to retrieve cached data: ${error}` },
+      { error: "Failed to retrieve cached data", message, stack },
       { status: 500 }
     )
   }

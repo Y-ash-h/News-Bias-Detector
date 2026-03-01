@@ -2,7 +2,7 @@ import os
 import subprocess
 
 # Ensure NLTK resources are downloaded
-subprocess.run(["python", "download_resources.py"])
+# subprocess.run(["python", "download_resources.py"])  # Commented out to avoid Anaconda conflicts
 
 from flask import Flask, jsonify, request
 import pandas as pd
@@ -40,13 +40,25 @@ def ensure_nltk_resource(resource_name):
 
     try:
         find(resource_name)
-
+        print(f"NLTK resource '{resource_name}' found")
     except LookupError:
-        print(f"Downloading NLTK resource: {resource_name}")
-        nltk.download(
-            resource_name,
-            download_dir=nltk_data_dir,
-        )
+        print(f"Warning: NLTK resource '{resource_name}' not found locally. Attempting download...")
+        try:
+            # Try with SSL workaround
+            import ssl
+            try:
+                _create_unverified_https_context = ssl._create_unverified_context
+            except AttributeError:
+                pass
+            else:
+                ssl._create_default_https_context = _create_unverified_https_context
+            
+            nltk.download(
+                resource_name,
+                download_dir=nltk_data_dir,
+            )
+        except Exception as e:
+            print(f"Could not download {resource_name}: {e}. Continuing anyway...")
 
 
 ensure_nltk_resource("punkt")
@@ -54,8 +66,9 @@ ensure_nltk_resource("wordnet")
 ensure_nltk_resource("stopwords")
 
 # MongoDB setup
-mongodb_url = str(os.getenv("MONGO_DB_URI")) + "&ssl_cert_reqs=CERT_NONE"
-client = MongoClient(mongodb_url)
+mongodb_url = str(os.getenv("MONGO_DB_URI"))
+# Remove the old ssl_cert_reqs parameter that's causing warnings
+client = MongoClient(mongodb_url, tlsAllowInvalidCertificates=True)
 db = client["NewsBiasApp"]
 collection = db["NewsArtciles"]
 
@@ -100,7 +113,8 @@ def bias():
         pred["text"] = pred["title"] + pred["text"]
         predict_pipeline = PredictPipeline()
 
-        result = predict_pipeline.predict(pred["text"].iloc[0])
+        # Pass the DataFrame column, not a scalar value
+        result = predict_pipeline.predict(pred[["text"]])
 
         return jsonify(
             {
@@ -400,4 +414,6 @@ def delete():
 
 
 if __name__ == "__main__":
-    app.run()
+    print(" * Starting News Bias Detector Backend")
+    print(" * Running on http://127.0.0.1:5001")
+    app.run(host="0.0.0.0", port=5001, debug=False)

@@ -5,7 +5,7 @@ import { Collection } from 'mongodb'
 export async function DELETE() {
   try {
     const client = await clientPromise
-    const collection: Collection = client.db("NewsBiasApp").collection("NewsArtciles")
+    const collection: Collection = client.db("newsBias").collection("NewsArticles")
     
     // Find oldest 1000 documents
     const oldestDocs = await collection

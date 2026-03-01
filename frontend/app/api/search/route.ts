@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const client = await clientPromise
-    const collection: Collection = client.db("NewsBiasApp").collection("NewsArtciles")
+    const collection: Collection = client.db("newsBias").collection("NewsArticles")
     
     // Create text index
     await collection.createIndex({ title: "text", text: "text" })

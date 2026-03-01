@@ -153,16 +153,18 @@ def save_to_json(data, output_file):
 
 def main():
     import os
+    import ssl
+    import certifi
     import dotenv
     from pymongo import MongoClient
     from pymongo.errors import BulkWriteError
 
     dotenv.load_dotenv()
-    mongodb_url = str(os.getenv("MONGO_DB_URI")) + "&ssl_cert_reqs=CERT_NONE"
+    mongodb_url = str(os.getenv("MONGO_DB_URI"))
 
-    client = MongoClient(mongodb_url)
-    db = client["NewsBiasApp"]
-    collection = db["NewsArtciles"]
+    client = MongoClient(mongodb_url, tlsCAFile=certifi.where())
+    db = client["newsBias"]
+    collection = db["NewsArticles"]
 
     websites = [
         "https://www.ndtv.com/",
